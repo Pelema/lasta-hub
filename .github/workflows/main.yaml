@@ -33,11 +33,11 @@ jobs:
 
                 run: |
                     docker build -f Dockerfile.backend --build-arg KAFKA_BROKER_HOST=$KAFKA_BROKER_HOST \
-                    -t ghcr.io//Pelema/lasta-hub:$(echo $GITHUB_SHA | head -c7) .
+                    -t ghcr.io/Pelema/lasta-hub:$(echo $GITHUB_SHA | head -c7) .
 
             -   name: Push image to GitHub Container Registry
                 run: |
-                      docker push ghcr.io//Pelema/lasta-hub:$(echo $GITHUB_SHA | head -c7)
+                      docker push ghcr.io/Pelema/lasta-hub:$(echo $GITHUB_SHA | head -c7)
               
 
     # gitops_develop:
