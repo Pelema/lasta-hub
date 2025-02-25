@@ -19,7 +19,7 @@ jobs:
         steps:
             # name: Checkout feature/codebase-combine
             # uses: actions/checkout@v4
-            - run: cat pwd
+            - run: ls
 
             -   name: Log in to GitHub Container Registry
                 uses: docker/login-action@v2
