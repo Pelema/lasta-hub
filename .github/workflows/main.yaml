@@ -32,7 +32,7 @@ jobs:
                     KAFKA_BROKER_HOST: ${{ vars.KAFKA_BROKER_HOST }}
 
                 run: |
-                    docker build --build-arg KAFKA_BROKER_HOST=$KAFKA_BROKER_HOST \
+                    docker build -f Dockerfile.backend --build-arg KAFKA_BROKER_HOST=$KAFKA_BROKER_HOST \
                     -t ghcr.io//Pelema/lasta-hub:$(echo $GITHUB_SHA | head -c7) .
 
             -   name: Push image to GitHub Container Registry
