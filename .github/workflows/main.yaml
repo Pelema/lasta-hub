@@ -5,19 +5,19 @@ on:
       types:
         - closed
       branches:
-        - master
+        - feature/codebase-combine
     push:
       branches:
-        - master
+        - feature/codebase-combine
 
 jobs: 
     build_develop:
         name: Build and Push
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/feature/codebase-combine'
         environment: develop
         runs-on: ubuntu-latest
         steps:
-            # name: Checkout master
+            # name: Checkout feature/codebase-combine
             # uses: actions/checkout@v4
 
             -   name: Log in to GitHub Container Registry
@@ -42,7 +42,7 @@ jobs:
 
     # gitops_develop:
     #     needs: build_develop
-    #     if: github.ref == 'refs/heads/master'
+    #     if: github.ref == 'refs/heads/feature/codebase-combine'
     #     runs-on: ubuntu-latest
     #     steps:
     #     -   name: Clone GitOps repository
