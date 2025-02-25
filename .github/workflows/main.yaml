@@ -17,9 +17,10 @@ jobs:
         environment: develop
         runs-on: ubuntu-latest
         steps:
-            # name: Checkout feature/codebase-combine
-            # uses: actions/checkout@v4
-            - run: ls
+            - name: Checkout feature/codebase-combine
+              uses: actions/checkout@v4
+
+            - run: ls -la
 
             -   name: Log in to GitHub Container Registry
                 uses: docker/login-action@v2
