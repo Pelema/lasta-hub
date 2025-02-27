@@ -28,14 +28,14 @@ jobs:
                 echo "::set-output name=sha::$(echo $GITHUB_SHA)"
                 echo $GITHUB_SHA > $GITHUB_WORKSPACE/_meta 
 
-            - uses: dorny/paths-filter@v3
-              id: filter
-              with:
-                filters: |
-                  server:
-                    - 'server/**'
-                  client:
-                    - 'client/**'
+            # - uses: dorny/paths-filter@v3
+            #   id: filter
+            #   with:
+            #     filters: |
+            #       server:
+            #         - 'server/**'
+            #       client:
+            #         - 'client/**'
 
             -   name: Log in to GitHub Container Registry
                 uses: docker/login-action@v2
@@ -45,7 +45,7 @@ jobs:
                     password: ${{ secrets.GITHUB_TOKEN }}
 
             -   name: Build Server Container Image
-                if: steps.filter.outputs.server == 'true'
+                # if: steps.filter.outputs.server == 'true'
                 env: 
                     KAFKA_BROKER_HOST: ${{ vars.KAFKA_BROKER_HOST }}
 
@@ -54,12 +54,12 @@ jobs:
                     -t ghcr.io/pelema/pdqa-backend:$(echo $GITHUB_SHA | head -c7) .
 
             -   name: Push Server Image to GitHub Container Registry
-                if: steps.filter.outputs.server == 'true'
+                # if: steps.filter.outputs.server == 'true'
                 run: |
                       docker push ghcr.io/pelema/pdqa-backend:$(echo $GITHUB_SHA | head -c7)
 
             -   name: Build Frontend Container Image
-                if: steps.filter.outputs.client == 'true'
+                # if: steps.filter.outputs.client == 'true'
                 env: 
                     FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
 
@@ -68,7 +68,7 @@ jobs:
                     -t ghcr.io/pelema/pdqa-frontend:$(echo $GITHUB_SHA | head -c7) .
 
             -   name: Push Server Image to GitHub Container Registry
-                if: steps.filter.outputs.client == 'true'
+                # if: steps.filter.outputs.client == 'true'
                 run: |
                       docker push ghcr.io/pelema/pdqa-frontend:$(echo $GITHUB_SHA | head -c7)
               
@@ -84,18 +84,9 @@ jobs:
                 repository: pelema/dev-ops
                 token: ${{ secrets.PAT }}
                 ref: master
-
-        -   uses: dorny/paths-filter@v3
-            id: filter
-            with:
-              filters: |
-                server:
-                  - 'server/**'
-                client:
-                  - 'client/**'
         
         -   name: Kustomize CBI-develop Server
-            if: github.repository == 'pelema/lasta-hub' && steps.filter.outputs.server == 'true'
+            if: github.repository == 'pelema/lasta-hub'
             run: |
                 cd overlays/develop
                 SHA=$(echo ${{needs.build_develop.outputs.output1}} | head -c7)
@@ -106,8 +97,8 @@ jobs:
                 git commit -m "version-$SHA"
                 git push 
 
-        -   name: Kustomize CBI-develop Server
-            if: github.repository == 'pelema/lasta-hub' && steps.filter.outputs.client == 'true'
+        -   name: Kustomize CBI-develop Frontend
+            if: github.repository == 'pelema/lasta-hub'
             run: |
                 cd overlays/develop
                 SHA=$(echo ${{needs.build_develop.outputs.output1}} | head -c7)
