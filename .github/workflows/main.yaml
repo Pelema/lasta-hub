@@ -18,6 +18,7 @@ jobs:
         runs-on: ubuntu-latest
         outputs:
           output1: ${{ steps.step1.outputs.sha }}
+
         steps:
             - name: Checkout feature/codebase-combine
               uses: actions/checkout@v4
@@ -27,6 +28,15 @@ jobs:
                 echo "::set-output name=sha::$(echo $GITHUB_SHA)"
                 echo $GITHUB_SHA > $GITHUB_WORKSPACE/_meta 
 
+            - uses: dorny/paths-filter@v3
+              id: filter
+              with:
+                filters: |
+                  server:
+                    - 'server/**'
+                  client:
+                    - 'client/**'
+
             -   name: Log in to GitHub Container Registry
                 uses: docker/login-action@v2
                 with:
@@ -34,7 +44,8 @@ jobs:
                     username: ${{ github.actor }}
                     password: ${{ secrets.GITHUB_TOKEN }}
 
-            -   name: Build Container Image
+            -   name: Build Server Container Image
+                if: steps.filter.outputs.server == 'true'
                 env: 
                     KAFKA_BROKER_HOST: ${{ vars.KAFKA_BROKER_HOST }}
 
@@ -42,9 +53,24 @@ jobs:
                     docker build -f ./Dockerfile.backend --build-arg KAFKA_BROKER_HOST=$KAFKA_BROKER_HOST \
                     -t ghcr.io/pelema/pdqa-backend:$(echo $GITHUB_SHA | head -c7) .
 
-            -   name: Push image to GitHub Container Registry
+            -   name: Push Server Image to GitHub Container Registry
+                if: steps.filter.outputs.server == 'true'
                 run: |
                       docker push ghcr.io/pelema/pdqa-backend:$(echo $GITHUB_SHA | head -c7)
+
+            -   name: Build Frontend Container Image
+                if: steps.filter.outputs.client == 'true'
+                env: 
+                    FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
+
+                run: |
+                    docker build -f ./Dockerfile.frontend --build-arg   PORT=$FRONTEND_PORT \
+                    -t ghcr.io/pelema/pdqa-frontend:$(echo $GITHUB_SHA | head -c7) .
+
+            -   name: Push Server Image to GitHub Container Registry
+                if: steps.filter.outputs.client == 'true'
+                run: |
+                      docker push ghcr.io/pelema/pdqa-frontend:$(echo $GITHUB_SHA | head -c7)
               
     gitops_develop:
         name: Update GitOps Image Tag
@@ -58,13 +84,34 @@ jobs:
                 repository: pelema/dev-ops
                 token: ${{ secrets.PAT }}
                 ref: master
+
+        -   uses: dorny/paths-filter@v3
+            id: filter
+            with:
+              filters: |
+                server:
+                  - 'server/**'
+                client:
+                  - 'client/**'
         
-        -   name: Kustomize CBI-develop
-            if: github.repository == 'pelema/lasta-hub'
+        -   name: Kustomize CBI-develop Server
+            if: github.repository == 'pelema/lasta-hub' && steps.filter.outputs.server == 'true'
             run: |
                 cd overlays/develop
                 SHA=$(echo ${{needs.build_develop.outputs.output1}} | head -c7)
                 kustomize edit set image ghcr.io/pelema/pdqa-backend:$SHA
+                git config user.name github-actions[bot]
+                git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+                git add .
+                git commit -m "version-$SHA"
+                git push 
+
+        -   name: Kustomize CBI-develop Server
+            if: github.repository == 'pelema/lasta-hub' && steps.filter.outputs.client == 'true'
+            run: |
+                cd overlays/develop
+                SHA=$(echo ${{needs.build_develop.outputs.output1}} | head -c7)
+                kustomize edit set image ghcr.io/pelema/pdqa-frontend:$SHA
                 git config user.name github-actions[bot]
                 git config user.email 41898282+github-actions[bot]@users.noreply.github.com
                 git add .
