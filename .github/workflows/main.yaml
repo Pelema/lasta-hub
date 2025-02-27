@@ -108,7 +108,7 @@ jobs:
                 git add .
                 git commit -m "version-$SHA"
                 git push 
-
+ 
     # develop-deploy:
     #     needs: gitops_develop
     #     runs-on: ubuntu-latest
